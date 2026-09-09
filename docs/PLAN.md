@@ -101,6 +101,11 @@ Orden sugerido por valor/esfuerzo en Linux:
   `screenGuard` cada 10 s (solo loguea cambios) + fallback a auto.
 - `watchdog.sh` + systemd timer opt-in (cooldown 10 min): revive con
   `omarchy restart shell` si la capa falta y el plugin sigue enabled.
+  ACTIVADO en esta máquina 09-sep (tras 3 muertes silenciosas: suspend,
+  reload en tormenta de monitores, lock).
+- Lock mata la superficie aunque el nombre no cambie: el guardián ahora
+  firma la topología (`lastScreenSig`) y re-coloca con su cambio, sin churn
+  (solo nombre o topología tocan `panel.screen`).
 
 ## Pulido v7 (09-sep)
 

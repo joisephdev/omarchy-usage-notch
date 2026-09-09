@@ -122,6 +122,9 @@ Item {
   // toca cuando cambia el nombre deseado; null = Quickshell elige.
   property var targetScreen: null
   property string appliedScreenName: "##none##"
+  // Firma de la topología (nombres ordenados). El lock/unlock apaga salidas:
+  // el nombre deseado no cambia pero la superficie muere igual.
+  property string lastScreenSig: ""
   function screenName(s) { return (s && s.name) ? String(s.name) : "" }
   function screenNames() {
     var out = [], screens = Quickshell.screens
@@ -145,13 +148,18 @@ Item {
   }
   function reconcileScreen(reason) {
     var names = root.screenNames()
+    var sig = names.slice().sort().join(",")
+    var topoChanged = sig !== root.lastScreenSig
+    if (topoChanged) root.lastScreenSig = sig
     var want = root.desiredScreenName()
     var targetName = (want !== "" && names.indexOf(want) !== -1) ? want : ""
-    if (targetName === root.appliedScreenName) return
+    // Solo se toca con cambio de nombre o de topología: reasignar por
+    // identidad de objeto recrea la superficie (eso mataba la pill).
+    if (!topoChanged && targetName === root.appliedScreenName) return
     root.targetScreen = targetName !== "" ? root.findScreen(targetName) : null
     root.appliedScreenName = targetName
     console.log("notch: screen ->", targetName !== "" ? targetName : "auto",
-      "(" + reason + ")")
+      "(" + reason + (topoChanged ? ", topo" : "") + ")")
   }
 
   // Foto estable del monitor con foco (solo al leer config o al pedirla):
