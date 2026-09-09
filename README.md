@@ -37,6 +37,20 @@ ln -s /home/rperaza/joisephdev/my-projects/plugins-projects/omarchy/omarchy-usag
 omarchy restart shell
 ```
 
+## Uninstall
+
+```sh
+omarchy plugin disable synapsync.usage-notch   # or: omarchy plugin remove synapsync.usage-notch
+```
+
+Optional leftovers (never touched without your consent):
+
+```sh
+systemctl --user disable --now usage-notch-watchdog.timer  # only if you enabled it
+rm -rf ~/.config/synapsync-usage-notch      # provider toggles + placement
+rm -rf ~/.local/state/synapsync-usage-notch # cached readings + backoff
+```
+
 ## Diagnose
 
 ```sh
