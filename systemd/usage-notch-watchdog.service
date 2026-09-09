@@ -1,0 +1,7 @@
+[Unit]
+Description=Usage Notch pill watchdog (revive layer if lost)
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.config/omarchy/plugins/synapsync.usage-notch/watchdog.sh
