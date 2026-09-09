@@ -873,16 +873,16 @@ def fetch_opencode_local_count(state, pid, name):
         return None  # db sin mensajes: nada que medir, sin celda
     _now, _mstart, month_end, day_end = _month_bounds()
     windows = [
-        {"id": "month", "label": "Tokens this month · local count, no limit",
+        {"id": "month", "label": "Month · local count",
          "usedFraction": None, "count": t_month, "resetsAt": month_end},
-        {"id": "today", "label": "Tokens today", "usedFraction": None,
+        {"id": "today", "label": "Today", "usedFraction": None,
          "count": t_today, "resetsAt": day_end},
     ]
     for provider in sorted(per):  # orden fijo: las filas no bailan
         m, _t = per[provider]
         if m > 0:
             windows.append({"id": "prov-" + str(provider),
-                            "label": "%s · this month" % provider,
+                            "label": "%s · month" % provider,
                             "usedFraction": None, "count": m,
                             "resetsAt": month_end})
     return {"id": pid, "displayName": name, "glyph": "opencode",
@@ -1136,9 +1136,9 @@ def fetch_gemini():
     t_month = sum(r[0] for _, _, r in sources)
     t_today = sum(r[1] for _, _, r in sources)
     windows = [
-        {"id": "month", "label": "Tokens this month · per-token, no limit",
+        {"id": "month", "label": "Month · per-token",
          "usedFraction": None, "count": t_month, "resetsAt": month_end},
-        {"id": "today", "label": "Tokens today", "usedFraction": None,
+        {"id": "today", "label": "Today", "usedFraction": None,
          "count": t_today, "resetsAt": day_end},
     ]
     # Filas por fuente solo si aportan: una fuente instalada pero a cero no
@@ -1146,7 +1146,7 @@ def fetch_gemini():
     # El orden fijo evita que las filas bailen entre refreshes.
     for sid, sname, reading in sources:  # filas que hacen el total comprobable
         if reading[0] > 0:
-            windows.append({"id": sid, "label": "%s · this month" % sname,
+            windows.append({"id": sid, "label": "%s · month" % sname,
                             "usedFraction": None, "count": reading[0],
                             "resetsAt": month_end})
     return {"id": pid, "displayName": name, "glyph": "gemini",
@@ -1374,17 +1374,17 @@ def fetch_pi_spend():
     m_usd, t_usd, _m_tok, _t_tok, per = reading
     _now, _mstart, month_end, day_end = _month_bounds()
     windows = [
-        {"id": "month", "label": "Spent this month · pi logs",
+        {"id": "month", "label": "Month · pi logs",
          "usedFraction": None, "count": round(m_usd, 4), "unit": "usd",
          "resetsAt": month_end},
-        {"id": "today", "label": "Spent today", "usedFraction": None,
+        {"id": "today", "label": "Today", "usedFraction": None,
          "count": round(t_usd, 4), "unit": "usd", "resetsAt": day_end},
     ]
     for provider in sorted(per):  # orden fijo: las filas no bailan
         cost = per[provider][0]
         if cost > 0:
             windows.append({"id": "prov-" + str(provider),
-                            "label": "%s · this month" % provider,
+                            "label": "%s · month" % provider,
                             "usedFraction": None, "count": round(cost, 4),
                             "unit": "usd", "resetsAt": month_end})
     return {"id": pid, "displayName": name, "glyph": "pi",

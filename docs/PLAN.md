@@ -102,6 +102,19 @@ Orden sugerido por valor/esfuerzo en Linux:
 - `watchdog.sh` + systemd timer opt-in (cooldown 10 min): revive con
   `omarchy restart shell` si la capa falta y el plugin sigue enabled.
 
+## Pulido v7 (09-sep)
+
+- Tarjeta 300→360px + etiquetas cortas (Month/Today/X·month): fin de los …
+- Pill 34→44px + conteos en tipografía menor (`isCount`): `~6.3M`/`$61.65`
+  ya no se salen.
+- Scroll con Flickable (clip + StopAtBounds); altura sigue compacta si hay
+  poco contenido.
+- Stale honesto: edad (`ageCopy`: just now/24m ago) en encabezado y ⚙ +
+  sección atenuada (opacity 0.6); los snaps stale conservan su fetchedAt.
+- Estabilidad: el guardián reasignaba `panel.screen` cada tick (los wrappers
+  Screen mueren entre queries) y ESO mataba la superficie. Ahora solo se
+  asigna cuando cambia el NOMBRE (`appliedScreenName`); churn cero.
+
 ## v1.0 — Acabado Omarchy
 
 - [x] Ajustes v0.1: interruptor por familia (click derecho en la pill o ⚙),

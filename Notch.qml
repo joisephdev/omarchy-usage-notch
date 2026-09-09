@@ -37,9 +37,9 @@ Item {
     return base + "/synapsync-usage-notch/config.json"
   }
 
-  readonly property int pillWidth: Style.space(34)
+  readonly property int pillWidth: Style.space(44)
   readonly property int rowH: Style.space(44)
-  readonly property int cardWidth: Style.space(300)
+  readonly property int cardWidth: Style.space(360)
   readonly property int gap: Style.space(10)
   readonly property int pad: Style.space(12)
   readonly property int pillHeight: Math.max(
@@ -102,13 +102,26 @@ Item {
     return "Resets in " + Math.floor(h / 24) + "d " + (h % 24) + "h"
   }
 
-  // Marcador de versión viva: confirma en el log qué código corre la shell.
-  Component.onCompleted: console.log("notch: loaded v6-screen-guard")
+  // Edad de la última lectura buena (los snaps stale conservan su fetchedAt).
+  function ageCopy(ts) {
+    if (!ts) return ""
+    var s = Math.max(0, Math.floor((Date.now() - ts) / 1000))
+    if (s < 90) return "just now"
+    var m = Math.floor(s / 60)
+    if (m < 90) return m + "m ago"
+    var h = Math.floor(m / 60)
+    if (h < 60) return h + "h ago"
+    return Math.floor(h / 24) + "d ago"
+  }
 
-  // Pantalla viva (no binding one-shot): un objeto Screen muerto tras
-  // reconfigurar monitores mataba la ventana en silencio. targetScreen se
-  // mantiene por nombre y el guardián la reatacha; null = Quickshell elige.
+  // Marcador de versión viva: confirma en el log qué código corre la shell.
+  Component.onCompleted: console.log("notch: loaded v7-polish")
+
+  // Pantalla viva por NOMBRE: los objetos Screen mueren entre queries y
+  // reasignar panel.screen recrea la superficie (parpadeo/muerte). Solo se
+  // toca cuando cambia el nombre deseado; null = Quickshell elige.
   property var targetScreen: null
+  property string appliedScreenName: "##none##"
   function screenName(s) { return (s && s.name) ? String(s.name) : "" }
   function screenNames() {
     var out = [], screens = Quickshell.screens
@@ -130,24 +143,13 @@ Item {
     if (want === "primary") { root.snapshotPrimary(); return root.primaryName || "" }
     return want
   }
-  // Solo reasigna (y loguea) cuando el destino cambia o el objeto murió:
-  // comparar por nombre evita reataches si Quickshell envuelve Screens nuevo.
   function reconcileScreen(reason) {
     var names = root.screenNames()
     var want = root.desiredScreenName()
     var targetName = (want !== "" && names.indexOf(want) !== -1) ? want : ""
-    var cur = root.targetScreen
-    var curName = root.screenName(cur)
-    if (curName !== "" && names.indexOf(curName) === -1) curName = ""
-    if (curName === targetName) {
-      if (targetName !== "" && (cur === null || root.screenName(cur) === ""
-          || names.indexOf(root.screenName(cur)) === -1)) {
-        root.targetScreen = root.findScreen(targetName)
-        console.log("notch: screen reattach", targetName, "(" + reason + ")")
-      }
-      return
-    }
+    if (targetName === root.appliedScreenName) return
     root.targetScreen = targetName !== "" ? root.findScreen(targetName) : null
+    root.appliedScreenName = targetName
     console.log("notch: screen ->", targetName !== "" ? targetName : "auto",
       "(" + reason + ")")
   }
@@ -205,7 +207,7 @@ Item {
   function subLine(p) {
     var s = p.status || "ok"
     if (s === "disabled") return "off — click to enable"
-    if (s === "stale") return "on · stale"
+    if (s === "stale") return "on · stale · " + root.ageCopy(p.fetchedAt)
     if (s === "needsAuth") return "on · sign in needed"
     if (s === "error") return "on · " + (p.error || "error")
     return "on"
@@ -402,11 +404,17 @@ Item {
           onClicked: {}
         }
 
-        Column {
-          id: cardColumn
+        Flickable {
           anchors { left: parent.left; right: parent.right; top: parent.top;
-                    margins: root.pad }
-          spacing: Style.space(8)
+                    bottom: parent.bottom; margins: root.pad }
+          contentWidth: width
+          contentHeight: cardColumn.implicitHeight
+          clip: true
+          boundsBehavior: Flickable.StopAtBounds
+          Column {
+            id: cardColumn
+            width: parent.width
+            spacing: Style.space(8)
 
           Row {
             width: parent.width
@@ -549,9 +557,11 @@ Item {
             delegate: Column {
               width: parent.width
               spacing: Style.space(4)
+              opacity: (modelData.status || "ok") === "stale" ? 0.6 : 1
               Text {
                 text: (modelData.displayName || "?")
-                  + (modelData.status === "stale" ? " · stale"
+                  + (modelData.status === "stale"
+                    ? " · stale · " + root.ageCopy(modelData.fetchedAt)
                     : modelData.status === "needsAuth" ? " · sign in"
                     : modelData.status === "error" ? " · error" : "")
                 color: Color.popups.text
@@ -608,6 +618,7 @@ Item {
             wrapMode: Text.Wrap
             width: parent.width
           }
+          }
         }
       }
 
@@ -659,6 +670,13 @@ Item {
               property alias ring: ringCanvas
               property var head: root.headline(modelData)
               property bool dimmed: (modelData.status || "ok") !== "ok"
+              // Los conteos (~6.3M, $61.65) son más largos que un %: van en
+              // tipografía menor para no salirse de la pill.
+              property bool isCount: {
+                var h = head
+                return !!h && (h.usedFraction === null
+                  || h.usedFraction === undefined)
+              }
 
               Canvas {
                 id: ringCanvas
@@ -689,7 +707,12 @@ Item {
                   return Math.round(parent.head.usedFraction * 100)
                 }
                 color: parent.dimmed ? Util.alpha(Color.foreground, 0.45) : Color.foreground
-                font { family: Style.font.family; pixelSize: Style.font.caption; bold: true }
+                font {
+                  family: Style.font.family
+                  pixelSize: parent.isCount
+                    ? Math.max(8, Style.font.caption - 3) : Style.font.caption
+                  bold: true
+                }
                 anchors { horizontalCenter: parent.horizontalCenter; top: ringCanvas.bottom; topMargin: -2 }
               }
             }
