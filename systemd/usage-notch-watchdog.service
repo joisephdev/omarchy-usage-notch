@@ -1,6 +1,9 @@
 [Unit]
 Description=Usage Notch pill watchdog (revive layer if lost)
 After=graphical-session.target
+# Si el plugin se desinstala sin apagar el timer, no fallar cada 2 min:
+# simplemente no correr.
+ConditionPathExists=%h/.config/omarchy/plugins/synapsync.usage-notch/manifest.json
 
 [Service]
 Type=oneshot

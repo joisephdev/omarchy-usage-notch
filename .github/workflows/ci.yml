@@ -1,0 +1,31 @@
+name: ci
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile check (stdlib only, no deps to install)
+        run: python3 -m py_compile usage.py
+      - name: Manifest is valid JSON with required keys
+        run: >
+          python3 -c "import json; m = json.load(open('manifest.json'));
+          assert m['schemaVersion'] == 1 and m['id'] and m['kinds'] and m['entryPoints'],
+          'bad manifest'"
+      - name: Config toggle roundtrip (offline, temp HOME)
+        run: >
+          export T=$(mktemp -d) &&
+          HOME="$T" XDG_CONFIG_HOME="$T/.config" python3 usage.py config toggle cursor &&
+          HOME="$T" XDG_CONFIG_HOME="$T/.config" python3 usage.py config | grep -q '"cursor"' &&
+          HOME="$T" XDG_CONFIG_HOME="$T/.config" python3 usage.py config enable cursor &&
+          rm -rf "$T"
+      - name: No accidental secrets in tree
+        run: >
+          ! grep -rn -E "sk-ant-[A-Za-z0-9_-]{10,}|gw_[a-z]+-[A-Za-z0-9]{16,}|xai-[A-Za-z0-9]{10,}"
+          --exclude-dir=.git --exclude=ci.yml . || (echo "possible secret in tree" && exit 1)

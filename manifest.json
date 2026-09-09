@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "synapsync.usage-notch",
   "name": "Usage Notch",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Roimer Peraza",
   "description": "AI coding-assistant usage limits pinned to the screen edge. Inspired by Codenotch.",
   "license": "MIT",

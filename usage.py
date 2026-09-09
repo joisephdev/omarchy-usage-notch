@@ -1587,7 +1587,9 @@ def cmd_doctor():
     for pid, name, path in discover_claude_profiles():
         token, expired, tpath = read_claude_token(path)
         if token:
-            masked = token[:4] + "..." + token[-4:] if len(token) > 12 else "present"
+            # Nunca fragmentos del secreto en salida, ni en terminal local:
+            # solo longitud para distinguir "hay token" de "vacío".
+            masked = "present (%d chars)" % len(token)
             print("[Claude] %s\n  profile: %s\n  credential: %s (%s, %s)" % (
                 name, path, tpath or "?", masked,
                 "expired — Claude Code lo refresca al usarse" if expired else "vigente"))
